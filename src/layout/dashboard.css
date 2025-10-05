@@ -1,0 +1,22 @@
+.recent-items-table-container {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+.recent-items-table-header {
+  margin-bottom: 12px;
+}
+
+.recent-items-table-title {
+  margin: 0;
+}
+
+/* Make the main container slightly narrower on large screens */
+@media (min-width: 992px) {
+  .container-fluid {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+}

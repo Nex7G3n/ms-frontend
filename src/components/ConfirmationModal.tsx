@@ -1,6 +1,4 @@
-import React from 'react';
 import { X } from 'lucide-react';
-import './ConfirmationModal.css';
 
 interface ConfirmationModalProps {
   message: string;

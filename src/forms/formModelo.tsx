@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import './formModelo.css';
 import type { CreateModeloDTO } from '../types/models';
 import { useMarcas } from '../hooks/useAutoPartes';
 
@@ -47,100 +45,50 @@ export default function ModeloForm({ onClose, onSubmit, initialData }: ModeloFor
   };
 
   return (
-    <div className="form-overlay">
-      <div className="form-modal">
-        <div className="form-header">
-          <h2 className="form-title">
-            {initialData ? 'Editar Modelo' : 'Nuevo Modelo'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="form-close-button"
-          >
-            <X className="form-close-icon" />
-          </button>
+    <>
+      <div className="modal show d-block" tabIndex={-1} role="dialog" aria-modal="true">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{initialData ? 'Editar Modelo' : 'Nuevo Modelo'}</h5>
+              <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label">Nombre *</label>
+                  <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className={`form-control ${errors.nombre ? 'is-invalid' : ''}`} placeholder="Ej: Corolla" />
+                  {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Año *</label>
+                  <input type="text" value={formData.anio} onChange={(e) => setFormData({ ...formData, anio: e.target.value })} className={`form-control ${errors.anio ? 'is-invalid' : ''}`} placeholder="Ej: 2020" />
+                  {errors.anio && <div className="invalid-feedback">{errors.anio}</div>}
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Marca *</label>
+                  <select value={formData.marcaId} onChange={(e) => setFormData({ ...formData, marcaId: parseInt(e.target.value) })} className={`form-select ${errors.marcaId ? 'is-invalid' : ''}`}>
+                    <option value="">{loadingMarcas ? 'Cargando marcas...' : 'Seleccionar marca'}</option>
+                    {!loadingMarcas && marcas.map((marca) => (
+                      <option key={marca.id} value={marca.id}>{marca.nombre}</option>
+                    ))}
+                  </select>
+                  {errors.marcaId && <div className="invalid-feedback">{errors.marcaId}</div>}
+                  {errorMarcas && <div className="invalid-feedback d-block">{errorMarcas}</div>}
+                </div>
+
+                <div className="modal-footer px-0">
+                  <button type="button" onClick={onClose} className="btn btn-secondary">Cancelar</button>
+                  <button type="submit" className="btn btn-primary">{initialData ? 'Actualizar' : 'Crear'} Modelo</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="form-body">
-          <div>
-            <label className="form-label">
-              Nombre *
-            </label>
-            <input
-              type="text"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              className={`form-input ${
-                errors.nombre ? 'error' : ''
-              }`}
-              placeholder="Ej: Corolla"
-            />
-            {errors.nombre && (
-              <p className="form-error-message">{errors.nombre}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="form-label">
-              Año *
-            </label>
-            <input
-              type="text"
-              value={formData.anio}
-              onChange={(e) => setFormData({ ...formData, anio: e.target.value })}
-              className={`form-input ${
-                errors.anio ? 'error' : ''
-              }`}
-              placeholder="Ej: 2020"
-            />
-            {errors.anio && (
-              <p className="form-error-message">{errors.anio}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="form-label">
-              Marca *
-            </label>
-            <select
-              value={formData.marcaId}
-              onChange={(e) => setFormData({ ...formData, marcaId: parseInt(e.target.value) })}
-              className={`form-select ${
-                errors.marcaId ? 'error' : ''
-              }`}
-            >
-              <option value="">{loadingMarcas ? 'Cargando marcas...' : 'Seleccionar marca'}</option>
-              {!loadingMarcas && marcas.map((marca) => (
-                <option key={marca.id} value={marca.id}>
-                  {marca.nombre}
-                </option>
-              ))}
-            </select>
-            {errors.marcaId && (
-              <p className="form-error-message">{errors.marcaId}</p>
-            )}
-            {errorMarcas && (
-              <p className="form-error-message">{errorMarcas}</p>
-            )}
-          </div>
-
-          <div className="form-footer">
-            <button
-              type="button"
-              onClick={onClose}
-              className="form-cancel-button"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="form-submit-button"
-            >
-              {initialData ? 'Actualizar' : 'Crear'} Modelo
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+      <div className="modal-backdrop show"></div>
+    </>
   );
 }

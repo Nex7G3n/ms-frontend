@@ -9,9 +9,15 @@ import type {
   CreateMarcaDTO,
   CreateModeloDTO,
   CreatePiezaDTO,
+  Client,
+  CreateClientDTO,
+  UpdateClientDTO,
 } from '../types/models';
 
 const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://nonloxodromic-harriette-inertly.ngrok-free.dev/api/auto';
+// Algunos endpoints (ej. clients) están en la raíz del host, no bajo /api/auto.
+// Construimos una base alternativa eliminando el sufijo conocido si existe.
+const CLIENTS_BASE_URL = API_BASE_URL.replace(/\/api\/auto\/?$/i, '') || API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -31,7 +37,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Interceptor para agregar token de autenticación si existe
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('authToken');
   if (token) {
     (config.headers as any).Authorization = `Bearer ${token}`;
@@ -41,8 +47,8 @@ apiClient.interceptors.request.use((config) => {
 
 // Interceptor para manejar errores globalmente
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: any) => response,
+  (error: any) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       window.location.href = '/login';
@@ -135,6 +141,24 @@ export const piezasApi = {
   update: (id: number, data: Partial<CreatePiezaDTO>) => 
     apiClient.put<Pieza>(`/piezas/${id}`, data),
   delete: (id: number) => apiClient.delete(`/piezas/${id}`),
+};
+
+// CLIENTS
+export const clientsApi = {
+  // Nota: la base URL por defecto ya apunta al gateway de auto; los endpoints de clientes
+  // asumen la ruta relativa /clients sobre la misma base. Si tu API de clientes está en
+  // otra base, puedes pasar la URL absoluta aquí.
+  getAll: () => apiClient.get<Client[]>(`${CLIENTS_BASE_URL}/clients`, { params: { t: Date.now() } }),
+  getById: (id: number) => apiClient.get<Client>(`${CLIENTS_BASE_URL}/clients/${id}`),
+  create: (data: CreateClientDTO) => {
+    // payload ya coincide con lo que espera el backend según el ejemplo
+    return apiClient.post<Client>(`${CLIENTS_BASE_URL}/clients`, data);
+  },
+  update: (id: number, data: UpdateClientDTO) => {
+    // A menudo el backend espera el id en la URL y el body con la entidad
+    return apiClient.put<Client>(`${CLIENTS_BASE_URL}/clients/${id}`, data);
+  },
+  delete: (id: number) => apiClient.delete(`${CLIENTS_BASE_URL}/clients/${id}`),
 };
 
 export default apiClient;

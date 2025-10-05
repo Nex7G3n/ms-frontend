@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import './formAutoparte.css';
+// import './formAutoparte.css';
 import type { CreateAutoparteDTO, Marca, Modelo, Pieza } from '../types/models';
 
 interface AutoparteFormProps {
@@ -94,179 +93,93 @@ export default function AutoparteForm({ onClose, onSubmit, initialData }: Autopa
   };
 
   return (
-    <div className="form-overlay">
-      <div className="form-modal">
-        <div className="form-header">
-          <h2 className="form-title">
-            {initialData ? 'Editar Autoparte' : 'Nueva Autoparte'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="form-close-button"
-          >
-            <X className="form-close-icon" />
-          </button>
+    <>
+      <div className="modal show d-block" tabIndex={-1} role="dialog" aria-modal="true">
+        <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{initialData ? 'Editar Autoparte' : 'Nueva Autoparte'}</h5>
+              <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label">Código de Producto *</label>
+                  <input
+                    type="text"
+                    value={formData.codigoProducto}
+                    onChange={(e) => setFormData({ ...formData, codigoProducto: e.target.value })}
+                    className={`form-control ${errors.codigoProducto ? 'is-invalid' : ''}`}
+                    placeholder="Ej: BP-2024-001"
+                  />
+                  {errors.codigoProducto && <div className="invalid-feedback">{errors.codigoProducto}</div>}
+                </div>
+
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Marca *</label>
+                    <select value={formData.marcaId} onChange={(e) => handleMarcaChange(e.target.value)} className="form-select">
+                      <option value="">Seleccionar marca</option>
+                      {mockMarcas.map((marca) => (
+                        <option key={marca.id} value={marca.id}>{marca.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Modelo *</label>
+                    <select value={formData.modeloId} onChange={(e) => setFormData({ ...formData, modeloId: e.target.value })} className={`form-select ${errors.modeloId ? 'is-invalid' : ''}`} disabled={!formData.marcaId}>
+                      <option value="">Seleccionar modelo</option>
+                      {filteredModelos.map((modelo) => (
+                        <option key={modelo.id} value={modelo.id}>{modelo.nombre}</option>
+                      ))}
+                    </select>
+                    {errors.modeloId && <div className="invalid-feedback d-block">{errors.modeloId}</div>}
+                  </div>
+                </div>
+
+                <div className="mb-3 mt-3">
+                  <label className="form-label">Pieza *</label>
+                  <select value={formData.piezaId} onChange={(e) => setFormData({ ...formData, piezaId: e.target.value })} className={`form-select ${errors.piezaId ? 'is-invalid' : ''}`}>
+                    <option value="">Seleccionar pieza</option>
+                    {mockPiezas.map((pieza) => (
+                      <option key={pieza.id} value={pieza.id}>{pieza.nombre} - {pieza.categoria}</option>
+                    ))}
+                  </select>
+                  {errors.piezaId && <div className="invalid-feedback d-block">{errors.piezaId}</div>}
+                </div>
+
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Precio *</label>
+                    <input type="number" step="0.01" min="0" value={formData.precio} onChange={(e) => setFormData({ ...formData, precio: e.target.value })} className={`form-control ${errors.precio ? 'is-invalid' : ''}`} placeholder="0.00" />
+                    {errors.precio && <div className="invalid-feedback">{errors.precio}</div>}
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Stock *</label>
+                    <input type="number" min="0" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} className={`form-control ${errors.stock ? 'is-invalid' : ''}`} placeholder="0" />
+                    {errors.stock && <div className="invalid-feedback">{errors.stock}</div>}
+                  </div>
+                </div>
+
+                <div className="mb-3 mt-3">
+                  <label className="form-label">Estado</label>
+                  <select value={formData.estado} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} className="form-select">
+                    <option value="Disponible">Disponible</option>
+                    <option value="Agotado">Agotado</option>
+                    <option value="Descontinuado">Descontinuado</option>
+                  </select>
+                </div>
+
+                <div className="modal-footer px-0">
+                  <button type="button" className="btn btn-secondary" onClick={onClose}>Cancelar</button>
+                  <button type="submit" className="btn btn-primary">{initialData ? 'Actualizar' : 'Crear'} Autoparte</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="form-body">
-          <div>
-            <label className="form-label">
-              Código de Producto *
-            </label>
-            <input
-              type="text"
-              value={formData.codigoProducto}
-              onChange={(e) => setFormData({ ...formData, codigoProducto: e.target.value })}
-              className={`form-input ${
-                errors.codigoProducto ? 'error' : ''
-              }`}
-              placeholder="Ej: BP-2024-001"
-            />
-            {errors.codigoProducto && (
-              <p className="form-error-message">{errors.codigoProducto}</p>
-            )}
-          </div>
-
-          <div className="form-grid-2-cols">
-            <div>
-              <label className="form-label">
-                Marca *
-              </label>
-              <select
-                value={formData.marcaId}
-                onChange={(e) => handleMarcaChange(e.target.value)}
-                className="form-select"
-              >
-                <option value="">Seleccionar marca</option>
-                {mockMarcas.map((marca) => (
-                  <option key={marca.id} value={marca.id}>
-                    {marca.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="form-label">
-                Modelo *
-              </label>
-              <select
-                value={formData.modeloId}
-                onChange={(e) => setFormData({ ...formData, modeloId: e.target.value })}
-                className={`form-select ${
-                  errors.modeloId ? 'error' : ''
-                }`}
-                disabled={!formData.marcaId}
-              >
-                <option value="">Seleccionar modelo</option>
-                {filteredModelos.map((modelo) => (
-                  <option key={modelo.id} value={modelo.id}>
-                    {modelo.nombre}
-                  </option>
-                ))}
-              </select>
-              {errors.modeloId && (
-                <p className="form-error-message">{errors.modeloId}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label">
-              Pieza *
-            </label>
-            <select
-              value={formData.piezaId}
-              onChange={(e) => setFormData({ ...formData, piezaId: e.target.value })}
-              className={`form-select ${
-                errors.piezaId ? 'error' : ''
-              }`}
-            >
-              <option value="">Seleccionar pieza</option>
-              {mockPiezas.map((pieza) => (
-                <option key={pieza.id} value={pieza.id}>
-                  {pieza.nombre} - {pieza.categoria}
-                </option>
-              ))}
-            </select>
-            {errors.piezaId && (
-              <p className="form-error-message">{errors.piezaId}</p>
-            )}
-          </div>
-
-          <div className="form-grid-2-cols">
-            <div>
-              <label className="form-label">
-                Precio *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.precio}
-                onChange={(e) => setFormData({ ...formData, precio: e.target.value })}
-                className={`form-input ${
-                  errors.precio ? 'error' : ''
-                }`}
-                placeholder="0.00"
-              />
-              {errors.precio && (
-                <p className="form-error-message">{errors.precio}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="form-label">
-                Stock *
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                className={`form-input ${
-                  errors.stock ? 'error' : ''
-                }`}
-                placeholder="0"
-              />
-              {errors.stock && (
-                <p className="form-error-message">{errors.stock}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="form-label">
-              Estado
-            </label>
-            <select
-              value={formData.estado}
-              onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-              className="form-select"
-            >
-              <option value="Disponible">Disponible</option>
-              <option value="Agotado">Agotado</option>
-              <option value="Descontinuado">Descontinuado</option>
-            </select>
-          </div>
-
-          <div className="form-footer">
-            <button
-              type="button"
-              onClick={onClose}
-              className="form-cancel-button"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="form-submit-button"
-            >
-              {initialData ? 'Actualizar' : 'Crear'} Autoparte
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+      <div className="modal-backdrop show"></div>
+    </>
   );
 }

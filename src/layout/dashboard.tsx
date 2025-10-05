@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, Package, Tag, Car, Grid3x3 } from 'lucide-react';
-import './dashboard.css';
 import AutoparteForm from '../forms/formAutoPartes';
 import MarcaForm from '../forms/formMarca';
 import ModeloForm from '../forms/formModelo';
 import PiezaForm from '../forms/formPieza';
+import ClienteForm from '../forms/formCliente';
 import ConfirmationModal from '../components/ConfirmationModal';
-import type { Autoparte, Marca, Modelo, Pieza, CreateAutoparteDTO, CreateMarcaDTO, CreateModeloDTO, CreatePiezaDTO } from '../types/models';
+import type { Autoparte, Marca, Modelo, Pieza, CreateAutoparteDTO, CreateMarcaDTO, CreateModeloDTO, CreatePiezaDTO, Client, CreateClientDTO, UpdateClientDTO } from '../types/models';
 import { useAutopartes, useMarcas, useModelos, usePiezas } from '../hooks/useAutoPartes';
-import { marcasApi, modelosApi, piezasApi, autopartesApi } from '../services/api';
+import { useClients } from '../hooks/useClients';
+import { marcasApi, modelosApi, piezasApi, autopartesApi, clientsApi } from '../services/api';
 
 export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +41,9 @@ export default function Dashboard() {
   const [editingModeloId, setEditingModeloId] = useState<number | null>(null);
   const [editingPieza, setEditingPieza] = useState<CreatePiezaDTO | null>(null);
   const [editingPiezaId, setEditingPiezaId] = useState<number | null>(null);
+  const { clients, loading: loadingClients, error: errorClients, refetch: refetchClients } = useClients();
+  const [showClienteForm, setShowClienteForm] = useState(false);
+  const [editingCliente, setEditingCliente] = useState<Client | null>(null);
 
   // Debug: longitudes de datos cargados
   console.log('[Dashboard] lengths', {
@@ -178,6 +182,11 @@ export default function Dashboard() {
           await sleep(150);
           await refetchPiezas();
           showToast('Pieza eliminada', 'success');
+        } else if (itemToDelete.type === 'client') {
+          await clientsApi.delete(itemToDelete.id);
+          await sleep(150);
+          await refetchClients();
+          showToast('Cliente eliminado', 'success');
         }
       } catch (e) {
         console.error('Error al eliminar:', e);
@@ -198,53 +207,78 @@ export default function Dashboard() {
     setShowAutoparteForm(true);
   };
 
+  const handleNewCliente = async (data: CreateClientDTO | UpdateClientDTO) => {
+    try {
+      if ((data as any).idClient) {
+        const id = (data as any).idClient;
+        await clientsApi.update(id, data as UpdateClientDTO);
+        await sleep(150);
+        await refetchClients();
+        showToast('Cliente actualizado exitosamente', 'success');
+      } else {
+        await clientsApi.create(data as CreateClientDTO);
+        await sleep(150);
+        await refetchClients();
+        showToast('Cliente creado exitosamente', 'success');
+      }
+      setShowClienteForm(false);
+      setEditingCliente(null);
+    } catch (e) {
+      console.error('Error al guardar cliente:', e);
+      showToast('Error al guardar cliente', 'error');
+    }
+  };
+
+  const handleEditCliente = (cliente: Client) => {
+    setEditingCliente(cliente);
+    setShowClienteForm(true);
+  };
+
   return (
     <>
-      <div className="dashboard-container">
+      <div className="container-fluid py-3">
         {/* Header */}
-        <header className="dashboard-header">
-          <div className="dashboard-header-content">
-            <div className="dashboard-header-flex">
-              <div className="dashboard-title-group">
-                <Package className="dashboard-icon-package" />
-                <h1 className="dashboard-title">AutoPartes Manager</h1>
-              </div>
-              <div className="dashboard-user-info">
-                <span className="dashboard-user-text">Admin</span>
-                <div className="dashboard-user-avatar">
-                  A
-                </div>
-              </div>
+        <header className="mb-3">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center gap-2">
+              <Package className="me-2" />
+              <h1 className="h4 mb-0">AutoPartes Manager</h1>
+            </div>
+            <div className="d-flex align-items-center gap-3">
+              <div className="text-muted">Admin</div>
+              <div className="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style={{width:36,height:36}}>A</div>
             </div>
           </div>
         </header>
 
-        <div className="dashboard-main-content">
+        <div>
           {/* Search Bar */}
-          <div className="search-bar-container">
-            <div className="search-bar-relative">
-              <Search className="search-icon" />
+          <div className="mb-3">
+            <div className="input-group">
+              <span className="input-group-text"><Search /></span>
               <input
                 type="text"
                 placeholder="Buscar por código, pieza o modelo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
+                className="form-control"
               />
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="stats-grid">
+          <div className="row g-3 mb-4">
             {statCards.map((stat, idx) => (
-              <div key={idx} className="stat-card">
-                <div className="stat-card-content">
-                  <div>
-                    <p className="stat-label">{stat.label}</p>
-                    <p className="stat-value">{stat.value}</p>
-                  </div>
-                  <div className={`${stat.color} stat-icon-wrapper`}>
-                    <stat.icon className="stat-icon" />
+              <div key={idx} className="col-md-3">
+                <div className="card shadow-sm h-100">
+                  <div className="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                      <p className="mb-1 text-muted small">{stat.label}</p>
+                      <h5 className="mb-0">{stat.value}</h5>
+                    </div>
+                    <div className="text-secondary" style={{fontSize:28}}>
+                      <stat.icon />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -252,111 +286,59 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="quick-actions-grid">
-            <button className="quick-action-button blue" onClick={() => setShowAutoparteForm(true)}>
-              Nueva Autoparte
-            </button>
-            <button className="quick-action-button green" onClick={() => setShowMarcaForm(true)}>
-              Nueva Marca
-            </button>
-            <button className="quick-action-button purple" onClick={() => setShowModeloForm(true)}>
-              Nuevo Modelo
-            </button>
-            <button className="quick-action-button orange" onClick={() => setShowPiezaForm(true)}>
-              Nueva Pieza
-            </button>
+          <div className="mb-4 d-flex gap-2">
+            <button className="btn btn-primary" onClick={() => setShowAutoparteForm(true)}>Nueva Autoparte</button>
+            <button className="btn btn-success" onClick={() => setShowMarcaForm(true)}>Nueva Marca</button>
+            <button className="btn btn-warning" onClick={() => setShowModeloForm(true)}>Nuevo Modelo</button>
+            <button className="btn btn-info text-white" onClick={() => setShowPiezaForm(true)}>Nueva Pieza</button>
           </div>
 
           {/* Alerts */}
-          <div className="alert-container">
-            <div className="alert-flex">
-              <div className="alert-icon-wrapper">
-                <svg className="alert-icon" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="alert-text-wrapper">
-                <p className="alert-text">
-                  <span className="alert-text-semibold">{stats.stockBajo} productos</span> con stock bajo requieren atención
-                </p>
+          <div className="mb-4">
+            <div className="alert alert-warning d-flex align-items-center" role="alert">
+              <svg className="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Warning:"><use /></svg>
+              <div>
+                <strong>{stats.stockBajo} productos</strong> con stock bajo requieren atención
               </div>
             </div>
           </div>
 
           {/* Recent Items Table */}
-          <div className="recent-items-table-container">
-            <div className="recent-items-table-header">
-              <h2 className="recent-items-table-title">Autopartes Recientes</h2>
-            </div>
+          <div className="mb-4">
+            <h2 className="h5">Autopartes Recientes</h2>
             <div className="table-responsive">
-              <table className="data-table">
-                <thead className="table-header-row">
+              <table className="table table-striped align-middle">
+                <thead>
                   <tr>
-                    <th className="table-header-cell">
-                      Código
-                    </th>
-                    <th className="table-header-cell">
-                      Pieza
-                    </th>
-                    <th className="table-header-cell">
-                      Modelo
-                    </th>
-                    <th className="table-header-cell">
-                      Stock
-                    </th>
-                    <th className="table-header-cell">
-                      Precio
-                    </th>
-                    <th className="table-header-cell">
-                      Acciones
-                    </th>
+                    <th>Código</th>
+                    <th>Pieza</th>
+                    <th>Modelo</th>
+                    <th>Stock</th>
+                    <th>Precio</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="table-body">
+                <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={6} className="table-cell text-center">Cargando autopartes...</td>
-                    </tr>
+                    <tr><td colSpan={6} className="text-center">Cargando autopartes...</td></tr>
                   ) : error ? (
-                    <tr>
-                      <td colSpan={6} className="table-cell text-center text-red-500">{error}</td>
-                    </tr>
+                    <tr><td colSpan={6} className="text-center text-danger">{error}</td></tr>
                   ) : autopartes.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="table-cell text-center">No hay autopartes disponibles.</td>
-                    </tr>
+                    <tr><td colSpan={6} className="text-center">No hay autopartes disponibles.</td></tr>
                   ) : (
                     autopartes.map((item: Autoparte) => (
-                      <tr key={item.id} className="table-row">
-                        <td className="table-cell font-medium">
-                          {item.codigoProducto}
+                      <tr key={item.id}>
+                        <td className="fw-medium">{item.codigoProducto}</td>
+                        <td className="text-muted">{item.pieza?.nombre}</td>
+                        <td className="text-muted">{item.modelo?.nombre}</td>
+                        <td>
+                          <span className={`badge ${item.stock < 10 ? 'bg-danger' : 'bg-success'}`}>{item.stock} unidades</span>
                         </td>
-                        <td className="table-cell text-gray-600">
-                          {item.pieza.nombre}
-                        </td>
-                        <td className="table-cell text-gray-600">
-                          {item.modelo.nombre}
-                        </td>
-                        <td className="table-cell">
-                          <span className={`stock-badge ${
-                            item.stock < 10 ? 'red' : 'green'
-                          }`}>
-                            {item.stock} unidades
-                          </span>
-                        </td>
-                        <td className="table-cell price">
-                          ${item.precio.toFixed(2)}
-                        </td>
-                        <td className="table-cell">
-                          <button className="action-button blue">
-                            Ver
-                          </button>
-                          <button className="action-button green" onClick={() => handleEditAutoparte(item)}>
-                            Editar
-                          </button>
-                          <button className="action-button red" onClick={() => handleDeleteClick(item.id, 'autoparte')}>
-                            Eliminar
-                          </button>
+                        <td>${item.precio.toFixed(2)}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-primary me-1">Ver</button>
+                          <button className="btn btn-sm btn-outline-success me-1" onClick={() => handleEditAutoparte(item)}>Editar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteClick(item.id, 'autoparte')}>Eliminar</button>
                         </td>
                       </tr>
                     ))
@@ -367,48 +349,28 @@ export default function Dashboard() {
           </div>
 
           {/* Marcas Table */}
-          <div className="recent-items-table-container">
-            <div className="recent-items-table-header">
-              <h2 className="recent-items-table-title">Marcas</h2>
-            </div>
+          <div className="mb-4">
+            <h2 className="h5">Marcas</h2>
             <div className="table-responsive">
-              <table className="data-table">
-                <thead className="table-header-row">
-                  <tr>
-                    <th className="table-header-cell">Nombre</th>
-                    <th className="table-header-cell">País de Origen</th>
-                    <th className="table-header-cell">Acciones</th>
-                  </tr>
+              <table className="table table-hover align-middle">
+                <thead>
+                  <tr><th>Nombre</th><th>País de Origen</th><th>Acciones</th></tr>
                 </thead>
-                <tbody className="table-body">
+                <tbody>
                   {loadingMarcas ? (
-                    <tr><td colSpan={3} className="table-cell text-center">Cargando marcas...</td></tr>
+                    <tr><td colSpan={3} className="text-center">Cargando marcas...</td></tr>
                   ) : errorMarcas ? (
-                    <tr><td colSpan={3} className="table-cell text-center text-red-500">{errorMarcas}</td></tr>
+                    <tr><td colSpan={3} className="text-center text-danger">{errorMarcas}</td></tr>
                   ) : marcas.length === 0 ? (
-                    <tr><td colSpan={3} className="table-cell text-center">No hay marcas.</td></tr>
+                    <tr><td colSpan={3} className="text-center">No hay marcas.</td></tr>
                   ) : (
                     marcas.map((m: Marca) => (
-                      <tr key={m.id} className="table-row">
-                        <td className="table-cell font-medium">{m.nombre}</td>
-                        <td className="table-cell text-gray-600">{m.paisOrigen}</td>
-                        <td className="table-cell">
-                          <button
-                            className="action-button green"
-                            onClick={() => {
-                              setEditingMarca({ nombre: m.nombre, paisOrigen: m.paisOrigen });
-                              setEditingMarcaId(m.id);
-                              setShowMarcaForm(true);
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="action-button red"
-                            onClick={() => handleDeleteClick(m.id, 'marca')}
-                          >
-                            Eliminar
-                          </button>
+                      <tr key={m.id}>
+                        <td className="fw-medium">{m.nombre}</td>
+                        <td className="text-muted">{m.paisOrigen}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-success me-1" onClick={() => { setEditingMarca({ nombre: m.nombre, paisOrigen: m.paisOrigen }); setEditingMarcaId(m.id); setShowMarcaForm(true); }}>Editar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteClick(m.id, 'marca')}>Eliminar</button>
                         </td>
                       </tr>
                     ))
@@ -419,50 +381,29 @@ export default function Dashboard() {
           </div>
 
           {/* Modelos Table */}
-          <div className="recent-items-table-container">
-            <div className="recent-items-table-header">
-              <h2 className="recent-items-table-title">Modelos</h2>
-            </div>
+          <div className="mb-4">
+            <h2 className="h5">Modelos</h2>
             <div className="table-responsive">
-              <table className="data-table">
-                <thead className="table-header-row">
-                  <tr>
-                    <th className="table-header-cell">Nombre</th>
-                    <th className="table-header-cell">Año</th>
-                    <th className="table-header-cell">Marca</th>
-                    <th className="table-header-cell">Acciones</th>
-                  </tr>
+              <table className="table table-hover align-middle">
+                <thead>
+                  <tr><th>Nombre</th><th>Año</th><th>Marca</th><th>Acciones</th></tr>
                 </thead>
-                <tbody className="table-body">
+                <tbody>
                   {loadingModelos ? (
-                    <tr><td colSpan={4} className="table-cell text-center">Cargando modelos...</td></tr>
+                    <tr><td colSpan={4} className="text-center">Cargando modelos...</td></tr>
                   ) : errorModelos ? (
-                    <tr><td colSpan={4} className="table-cell text-center text-red-500">{errorModelos}</td></tr>
+                    <tr><td colSpan={4} className="text-center text-danger">{errorModelos}</td></tr>
                   ) : modelos.length === 0 ? (
-                    <tr><td colSpan={4} className="table-cell text-center">No hay modelos.</td></tr>
+                    <tr><td colSpan={4} className="text-center">No hay modelos.</td></tr>
                   ) : (
                     modelos.map((mo: Modelo) => (
-                      <tr key={mo.id} className="table-row">
-                        <td className="table-cell font-medium">{mo.nombre}</td>
-                        <td className="table-cell text-gray-600">{mo.anio}</td>
-                        <td className="table-cell text-gray-600">{mo.marca?.nombre}</td>
-                        <td className="table-cell">
-                          <button
-                            className="action-button green"
-                            onClick={() => {
-                              setEditingModelo({ nombre: mo.nombre, anio: mo.anio, marcaId: mo.marca?.id || 0 });
-                              setEditingModeloId(mo.id);
-                              setShowModeloForm(true);
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="action-button red"
-                            onClick={() => handleDeleteClick(mo.id, 'modelo')}
-                          >
-                            Eliminar
-                          </button>
+                      <tr key={mo.id}>
+                        <td className="fw-medium">{mo.nombre}</td>
+                        <td className="text-muted">{mo.anio}</td>
+                        <td className="text-muted">{mo.marca?.nombre}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-success me-1" onClick={() => { setEditingModelo({ nombre: mo.nombre, anio: mo.anio, marcaId: mo.marca?.id || 0 }); setEditingModeloId(mo.id); setShowModeloForm(true); }}>Editar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteClick(mo.id, 'modelo')}>Eliminar</button>
                         </td>
                       </tr>
                     ))
@@ -473,50 +414,77 @@ export default function Dashboard() {
           </div>
 
           {/* Piezas Table */}
+          <div className="mb-4">
+            <h2 className="h5">Piezas</h2>
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead>
+                  <tr><th>Nombre</th><th>Categoría</th><th>Descripción</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                  {loadingPiezas ? (
+                    <tr><td colSpan={4} className="text-center">Cargando piezas...</td></tr>
+                  ) : errorPiezas ? (
+                    <tr><td colSpan={4} className="text-center text-danger">{errorPiezas}</td></tr>
+                  ) : piezas.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center">No hay piezas.</td></tr>
+                  ) : (
+                    piezas.map((p: Pieza) => (
+                      <tr key={p.id}>
+                        <td className="fw-medium">{p.nombre}</td>
+                        <td className="text-muted">{p.categoria}</td>
+                        <td className="text-muted">{p.descripcion}</td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-success me-1" onClick={() => { setEditingPieza({ nombre: p.nombre, categoria: p.categoria, descripcion: p.descripcion }); setEditingPiezaId(p.id); setShowPiezaForm(true); }}>Editar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteClick(p.id, 'pieza')}>Eliminar</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Clientes Table */}
           <div className="recent-items-table-container">
-            <div className="recent-items-table-header">
-              <h2 className="recent-items-table-title">Piezas</h2>
+            <div className="recent-items-table-header d-flex justify-content-between align-items-center">
+              <h2 className="recent-items-table-title">Clientes</h2>
+              <div>
+                <button className="btn btn-primary btn-sm" onClick={() => { setEditingCliente(null); setShowClienteForm(true); }}>
+                  Nuevo Cliente
+                </button>
+              </div>
             </div>
             <div className="table-responsive">
-              <table className="data-table">
+              <table className="table table-hover">
                 <thead className="table-header-row">
                   <tr>
                     <th className="table-header-cell">Nombre</th>
-                    <th className="table-header-cell">Categoría</th>
-                    <th className="table-header-cell">Descripción</th>
+                    <th className="table-header-cell">Email</th>
+                    <th className="table-header-cell">Teléfono</th>
+                    <th className="table-header-cell">Documento</th>
                     <th className="table-header-cell">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="table-body">
-                  {loadingPiezas ? (
-                    <tr><td colSpan={4} className="table-cell text-center">Cargando piezas...</td></tr>
-                  ) : errorPiezas ? (
-                    <tr><td colSpan={4} className="table-cell text-center text-red-500">{errorPiezas}</td></tr>
-                  ) : piezas.length === 0 ? (
-                    <tr><td colSpan={4} className="table-cell text-center">No hay piezas.</td></tr>
+                  {loadingClients ? (
+                    <tr><td colSpan={5} className="table-cell text-center">Cargando clientes...</td></tr>
+                  ) : errorClients ? (
+                    <tr><td colSpan={5} className="table-cell text-center text-red-500">{errorClients}</td></tr>
+                  ) : clients.length === 0 ? (
+                    <tr><td colSpan={5} className="table-cell text-center">No hay clientes.</td></tr>
                   ) : (
-                    piezas.map((p: Pieza) => (
-                      <tr key={p.id} className="table-row">
-                        <td className="table-cell font-medium">{p.nombre}</td>
-                        <td className="table-cell text-gray-600">{p.categoria}</td>
-                        <td className="table-cell text-gray-600">{p.descripcion}</td>
+                    clients.map((c: Client) => (
+                      <tr key={c.idClient} className="table-row">
+                        <td className="table-cell font-medium">{c.firstName} {c.lastName}</td>
+                        <td className="table-cell text-muted">{c.email}</td>
+                        <td className="table-cell text-muted">{c.phone}</td>
+                        <td className="table-cell text-muted">{c.documentNumber}</td>
                         <td className="table-cell">
-                          <button
-                            className="action-button green"
-                            onClick={() => {
-                              setEditingPieza({ nombre: p.nombre, categoria: p.categoria, descripcion: p.descripcion });
-                              setEditingPiezaId(p.id);
-                              setShowPiezaForm(true);
-                            }}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            className="action-button red"
-                            onClick={() => handleDeleteClick(p.id, 'pieza')}
-                          >
-                            Eliminar
-                          </button>
+                          <button className="btn btn-sm btn-outline-primary me-1">Ver</button>
+                          <button className="btn btn-sm btn-outline-success me-1" onClick={() => handleEditCliente(c)}>Editar</button>
+                          <button className="btn btn-sm btn-outline-danger" onClick={() => handleDeleteClick(c.idClient, 'client')}>Eliminar</button>
                         </td>
                       </tr>
                     ))
@@ -557,6 +525,8 @@ export default function Dashboard() {
       {showMarcaForm && <MarcaForm onClose={() => { setShowMarcaForm(false); setEditingMarca(null); setEditingMarcaId(null); }} onSubmit={handleNewMarca} initialData={editingMarca || undefined} />}
       {showModeloForm && <ModeloForm onClose={() => { setShowModeloForm(false); setEditingModelo(null); setEditingModeloId(null); }} onSubmit={handleNewModelo} initialData={editingModelo || undefined} />}
       {showPiezaForm && <PiezaForm onClose={() => { setShowPiezaForm(false); setEditingPieza(null); setEditingPiezaId(null); }} onSubmit={handleNewPieza} initialData={editingPieza || undefined} />}
+
+  {showClienteForm && <ClienteForm onClose={() => { setShowClienteForm(false); setEditingCliente(null); }} onSubmit={handleNewCliente} initialData={editingCliente || undefined} />}
 
       {showConfirmModal && itemToDelete && (
         <ConfirmationModal

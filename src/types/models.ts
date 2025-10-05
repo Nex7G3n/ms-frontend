@@ -73,3 +73,65 @@ export interface PaginatedResponse<T> {
   size: number;
   number: number;
 }
+
+// Clientes y tipos relacionados
+export interface Department {
+  idDepartment: number;
+  name: string;
+}
+
+export interface Province {
+  idProvince: number;
+  name: string;
+  department: Department;
+}
+
+export interface District {
+  idDistrict: number;
+  name: string;
+  province: Province;
+}
+
+export interface Address {
+  idAddress?: number;
+  street: string;
+  number: string;
+  reference?: string;
+  district: District | { idDistrict: number };
+}
+
+export interface DocumentType {
+  idDocumentType: number;
+  name?: string;
+  description?: string;
+}
+
+export interface Client {
+  idClient: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  documentNumber: string;
+  documentType: DocumentType;
+  address: Address;
+}
+
+export interface CreateClientDTO {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  documentNumber: string;
+  documentType: { idDocumentType: number };
+  address: {
+    street: string;
+    number: string;
+    reference?: string;
+    district: { idDistrict: number };
+  };
+}
+
+export interface UpdateClientDTO extends Partial<CreateClientDTO> {
+  idClient: number;
+}

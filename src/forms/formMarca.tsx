@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import './formMarca.css';
 import type { CreateMarcaDTO } from '../types/models';
 
 interface MarcaFormProps {
@@ -42,74 +40,36 @@ export default function MarcaForm({ onClose, onSubmit, initialData }: MarcaFormP
   };
 
   return (
-    <div className="form-overlay">
-      <div className="form-modal">
-        <div className="form-header">
-          <h2 className="form-title">
-            {initialData ? 'Editar Marca' : 'Nueva Marca'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="form-close-button"
-          >
-            <X className="form-close-icon" />
-          </button>
+    <>
+      <div className="modal show d-block" tabIndex={-1} role="dialog" aria-modal="true">
+        <div className="modal-dialog modal-dialog-centered" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{initialData ? 'Editar Marca' : 'Nueva Marca'}</h5>
+              <button type="button" className="btn-close" aria-label="Close" onClick={onClose}></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label">Nombre *</label>
+                  <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} className={`form-control ${errors.nombre ? 'is-invalid' : ''}`} placeholder="Ej: Toyota" />
+                  {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">País de Origen *</label>
+                  <input type="text" value={formData.paisOrigen} onChange={(e) => setFormData({ ...formData, paisOrigen: e.target.value })} className={`form-control ${errors.paisOrigen ? 'is-invalid' : ''}`} placeholder="Ej: Japón" />
+                  {errors.paisOrigen && <div className="invalid-feedback">{errors.paisOrigen}</div>}
+                </div>
+                <div className="modal-footer px-0">
+                  <button type="button" onClick={onClose} className="btn btn-secondary">Cancelar</button>
+                  <button type="submit" className="btn btn-primary">{initialData ? 'Actualizar' : 'Crear'} Marca</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="form-body">
-          <div>
-            <label className="form-label">
-              Nombre *
-            </label>
-            <input
-              type="text"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              className={`form-input ${
-                errors.nombre ? 'error' : ''
-              }`}
-              placeholder="Ej: Toyota"
-            />
-            {errors.nombre && (
-              <p className="form-error-message">{errors.nombre}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="form-label">
-              País de Origen *
-            </label>
-            <input
-              type="text"
-              value={formData.paisOrigen}
-              onChange={(e) => setFormData({ ...formData, paisOrigen: e.target.value })}
-              className={`form-input ${
-                errors.paisOrigen ? 'error' : ''
-              }`}
-              placeholder="Ej: Japón"
-            />
-            {errors.paisOrigen && (
-              <p className="form-error-message">{errors.paisOrigen}</p>
-            )}
-          </div>
-
-          <div className="form-footer">
-            <button
-              type="button"
-              onClick={onClose}
-              className="form-cancel-button"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="form-submit-button"
-            >
-              {initialData ? 'Actualizar' : 'Crear'} Marca
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+      <div className="modal-backdrop show"></div>
+    </>
   );
 }

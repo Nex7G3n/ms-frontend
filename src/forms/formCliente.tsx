@@ -60,7 +60,17 @@ export default function ClienteForm({ onClose, onSubmit, initialData }: ClienteF
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      onSubmit(formData as CreateClientDTO);
+      // If we're editing an existing client, include idClient so the caller can perform a PUT
+      const asClient = initialData as Client | undefined;
+      if (asClient && (asClient as any).idClient) {
+        const payload: UpdateClientDTO = {
+          idClient: (asClient as any).idClient,
+          ...formData,
+        };
+        onSubmit(payload);
+      } else {
+        onSubmit(formData as CreateClientDTO);
+      }
     }
   };
 

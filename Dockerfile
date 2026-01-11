@@ -19,5 +19,5 @@ COPY ./package.json package-lock.json /app/
 COPY --from=production-dependencies-env /app/node_modules /app/node_modules
 COPY --from=build-env /app/dist /app/build
 WORKDIR /app
-EXPOSE 4173
-CMD ["npm", "run", "start", "--", "--host", "0.0.0.0"]
+EXPOSE 80
+CMD ["npm", "run", "start", "--", "--host", "0.0.0.0", "--port", "80"]

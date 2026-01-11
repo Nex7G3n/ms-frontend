@@ -13,7 +13,7 @@ import type {
 // ⚙️ Configuración base de Axios
 // ===============================
 const api = axios.create({
-  baseURL: 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io', // URL completa del API Gateway
+  baseURL: 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io/api', // Cambiado a la base general de la API
   headers: {
     'Content-Type': 'application/json',
   },

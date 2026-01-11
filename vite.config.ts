@@ -1,7 +1,9 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react"; // Importar el plugin de React para Vite
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+  base: '/', // Añadir base relativa
+  plugins: [tailwindcss(), react(), tsconfigPaths()], // Usar el plugin de React
+});

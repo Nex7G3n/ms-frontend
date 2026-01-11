@@ -14,7 +14,7 @@ import type {
   UpdateClientDTO,
 } from '../types/models';
 
-const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'https://nonloxodromic-harriette-inertly.ngrok-free.dev/api/auto';
+const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io/api/auto';
 // Algunos endpoints (ej. clients) están en la raíz del host, no bajo /api/auto.
 // Construimos una base alternativa eliminando el sufijo conocido si existe.
 const CLIENTS_BASE_URL = API_BASE_URL.replace(/\/api\/auto\/?$/i, '') || API_BASE_URL;

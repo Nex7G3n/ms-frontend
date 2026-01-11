@@ -97,8 +97,7 @@ export const autopartesApi = {
 
 // MARCAS
 export const marcasApi = {
-  // Forzar URL absoluta para depuración: asegura que pega exactamente al endpoint esperado
-  getAll: () => apiClient.get<Marca[]>(`${API_BASE_URL}/marcas`, { params: { t: Date.now() } }),
+  getAll: () => apiClient.get<Marca[]>(`/marcas`, { params: { t: Date.now() } }),
   getById: (id: number) => apiClient.get<Marca>(`/marcas/${id}`),
   create: (data: CreateMarcaDTO) => apiClient.post<Marca>('/marcas', data),
   update: (id: number, data: Partial<CreateMarcaDTO>) => 

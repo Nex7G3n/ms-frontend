@@ -14,7 +14,7 @@ import type {
   UpdateClientDTO,
 } from '../types/models';
 
-const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io/api/autopartes';
+const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io';
 // Algunos endpoints (ej. clients) están en la raíz del host, no bajo /api/auto.
 // Construimos una base alternativa eliminando el sufijo conocido si existe.
 const CLIENTS_BASE_URL = API_BASE_URL.replace(/\/api\/auto\/?$/i, '') || API_BASE_URL;
@@ -59,8 +59,8 @@ apiClient.interceptors.response.use(
 
 // AUTOPARTES
 export const autopartesApi = {
-  getAll: () => apiClient.get<Autoparte[]>('/autopartes', { params: { t: Date.now() } }),
-  getById: (id: number) => apiClient.get<Autoparte>(`/autopartes/${id}`),
+  getAll: () => apiClient.get<Autoparte[]>('/api/autopartes/autopartes', { params: { t: Date.now() } }),
+  getById: (id: number) => apiClient.get<Autoparte>(`/api/autopartes/autopartes/${id}`),
   create: (data: CreateAutoparteDTO) => {
     // Transformar el DTO para que coincida con lo que espera el backend
     const payload = {
@@ -71,7 +71,7 @@ export const autopartesApi = {
       stock: data.stock,
       estado: data.estado,
     };
-    return apiClient.post<Autoparte>('/autopartes', payload);
+    return apiClient.post<Autoparte>('/api/autopartes/autopartes', payload);
   },
   update: (id: number, data: Partial<CreateAutoparteDTO>) => {
     const payload: any = {
@@ -82,42 +82,42 @@ export const autopartesApi = {
     };
     if (data.modeloId) payload.modelo = { id: data.modeloId };
     if (data.piezaId) payload.pieza = { id: data.piezaId };
-    return apiClient.put<Autoparte>(`/autopartes/${id}`, payload);
+    return apiClient.put<Autoparte>(`/api/autopartes/autopartes/${id}`, payload);
   },
   updateStock: (id: number, stock: number) => 
-    apiClient.patch<Autoparte>(`/autopartes/${id}/stock?stock=${stock}`),
-  delete: (id: number) => apiClient.delete(`/autopartes/${id}`),
+    apiClient.patch<Autoparte>(`/api/autopartes/autopartes/${id}/stock?stock=${stock}`),
+  delete: (id: number) => apiClient.delete(`/api/autopartes/autopartes/${id}`),
   searchByCodigo: (codigo: string) => 
-    apiClient.get<Autoparte>(`/autopartes/codigo/${codigo}`),
+    apiClient.get<Autoparte>(`/api/autopartes/autopartes/codigo/${codigo}`),
   getByModelo: (modeloId: number) => 
-    apiClient.get<Autoparte[]>(`/autopartes/modelo/${modeloId}`),
+    apiClient.get<Autoparte[]>(`/api/autopartes/autopartes/modelo/${modeloId}`),
   getByPieza: (piezaId: number) => 
-    apiClient.get<Autoparte[]>(`/autopartes/pieza/${piezaId}`),
+    apiClient.get<Autoparte[]>(`/api/autopartes/autopartes/pieza/${piezaId}`),
 };
 
 // MARCAS
 export const marcasApi = {
-  getAll: () => apiClient.get<Marca[]>(`/marcas`, { params: { t: Date.now() } }),
-  getById: (id: number) => apiClient.get<Marca>(`/marcas/${id}`),
-  create: (data: CreateMarcaDTO) => apiClient.post<Marca>('/marcas', data),
+  getAll: () => apiClient.get<Marca[]>(`/api/autopartes/marcas`, { params: { t: Date.now() } }),
+  getById: (id: number) => apiClient.get<Marca>(`/api/autopartes/marcas/${id}`),
+  create: (data: CreateMarcaDTO) => apiClient.post<Marca>('/api/autopartes/marcas', data),
   update: (id: number, data: Partial<CreateMarcaDTO>) => 
-    apiClient.put<Marca>(`/marcas/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/marcas/${id}`),
+    apiClient.put<Marca>(`/api/autopartes/marcas/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/autopartes/marcas/${id}`),
 };
 
 // MODELOS
 export const modelosApi = {
-  getAll: () => apiClient.get<Modelo[]>('/modelos', { params: { t: Date.now() } }),
-  getById: (id: number) => apiClient.get<Modelo>(`/modelos/${id}`),
+  getAll: () => apiClient.get<Modelo[]>('/api/autopartes/modelos', { params: { t: Date.now() } }),
+  getById: (id: number) => apiClient.get<Modelo>(`/api/autopartes/modelos/${id}`),
   getByMarca: (marcaId: number) => 
-    apiClient.get<Modelo[]>(`/modelos/marca/${marcaId}`),
+    apiClient.get<Modelo[]>(`/api/autopartes/modelos/marca/${marcaId}`),
   create: (data: CreateModeloDTO) => {
     const payload = {
       nombre: data.nombre,
       anio: data.anio,
       marca: { id: data.marcaId },
     };
-    return apiClient.post<Modelo>('/modelos', payload);
+    return apiClient.post<Modelo>('/api/autopartes/modelos', payload);
   },
   update: (id: number, data: Partial<CreateModeloDTO>) => {
     const payload: any = {
@@ -125,21 +125,21 @@ export const modelosApi = {
       anio: data.anio,
     };
     if (data.marcaId) payload.marca = { id: data.marcaId };
-    return apiClient.put<Modelo>(`/modelos/${id}`, payload);
+    return apiClient.put<Modelo>(`/api/autopartes/modelos/${id}`, payload);
   },
-  delete: (id: number) => apiClient.delete(`/modelos/${id}`),
+  delete: (id: number) => apiClient.delete(`/api/autopartes/modelos/${id}`),
 };
 
 // PIEZAS
 export const piezasApi = {
-  getAll: () => apiClient.get<Pieza[]>('/piezas', { params: { t: Date.now() } }),
-  getById: (id: number) => apiClient.get<Pieza>(`/piezas/${id}`),
+  getAll: () => apiClient.get<Pieza[]>('/api/autopartes/piezas', { params: { t: Date.now() } }),
+  getById: (id: number) => apiClient.get<Pieza>(`/api/autopartes/piezas/${id}`),
   getByCategoria: (categoria: string) => 
-    apiClient.get<Pieza[]>(`/piezas/categoria/${categoria}`),
-  create: (data: CreatePiezaDTO) => apiClient.post<Pieza>('/piezas', data),
+    apiClient.get<Pieza[]>(`/api/autopartes/piezas/categoria/${categoria}`),
+  create: (data: CreatePiezaDTO) => apiClient.post<Pieza>('/api/autopartes/piezas', data),
   update: (id: number, data: Partial<CreatePiezaDTO>) => 
-    apiClient.put<Pieza>(`/piezas/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/piezas/${id}`),
+    apiClient.put<Pieza>(`/api/autopartes/piezas/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/api/autopartes/piezas/${id}`),
 };
 
 // CLIENTS

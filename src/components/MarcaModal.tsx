@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Car, Globe, Loader2 } from 'lucide-react';
-import type { Marca, CreateMarcaDTO } from '../types/modelMarca';
+import type { Marca, CreateMarcaDTO } from '../types/models';
 
 interface MarcaModalProps {
   marca: Marca | null;

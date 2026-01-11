@@ -6,7 +6,7 @@ import {
   updateMarca,
   deleteMarca,
 } from '../services/apiMarcas';
-import type { Marca, CreateMarcaDTO, UpdateMarcaDTO } from '../types/modelMarca';
+import type { Marca, CreateMarcaDTO } from '../types/models';
 import MarcaModal from './MarcaModal';
 import ConfirmationModal from './ConfirmationModal';
 

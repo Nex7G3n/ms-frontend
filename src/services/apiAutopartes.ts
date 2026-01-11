@@ -1,53 +1,46 @@
-import axios from 'axios';
-import type { Autoparte, AutoparteFormData } from '../types/modelAutoparte';
-
-const apiAutopartes = axios.create({
-  baseURL: 'http://vw4wg0so8cgs4ss840wwok00.46.62.225.65.sslip.io/api/autopartes', // Ajusta la URL base según tu configuración
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { autopartesApi } from './api';
+import type { Autoparte, CreateAutoparteDTO } from '../types/models';
 
 export const getAutopartes = async (): Promise<Autoparte[]> => {
-  const res = await apiAutopartes.get('');
+  const res = await autopartesApi.getAll();
   return res.data;
 };
 
 export const getAutoparteById = async (id: number): Promise<Autoparte> => {
-  const res = await apiAutopartes.get(`/${id}`);
+  const res = await autopartesApi.getById(id);
   return res.data;
 };
 
-export const createAutoparte = async (data: AutoparteFormData): Promise<Autoparte> => {
-  const res = await apiAutopartes.post('', data);
+export const createAutoparte = async (data: CreateAutoparteDTO): Promise<Autoparte> => {
+  const res = await autopartesApi.create(data);
   return res.data;
 };
 
-export const updateAutoparte = async (id: number, data: AutoparteFormData): Promise<Autoparte> => {
-  const res = await apiAutopartes.put(`/${id}`, data);
+export const updateAutoparte = async (id: number, data: CreateAutoparteDTO): Promise<Autoparte> => {
+  const res = await autopartesApi.update(id, data);
   return res.data;
 };
 
 export const deleteAutoparte = async (id: number): Promise<void> => {
-  await apiAutopartes.delete(`/${id}`);
+  await autopartesApi.delete(id);
 };
 
 export const getAutoparteByCodigo = async (codigo: string): Promise<Autoparte> => {
-  const res = await apiAutopartes.get(`/codigo/${codigo}`);
+  const res = await autopartesApi.searchByCodigo(codigo);
   return res.data;
 };
 
 export const getAutopartesByModelo = async (modeloId: number): Promise<Autoparte[]> => {
-  const res = await apiAutopartes.get(`/modelo/${modeloId}`);
+  const res = await autopartesApi.getByModelo(modeloId);
   return res.data;
 };
 
 export const getAutopartesByPieza = async (piezaId: number): Promise<Autoparte[]> => {
-  const res = await apiAutopartes.get(`/pieza/${piezaId}`);
+  const res = await autopartesApi.getByPieza(piezaId);
   return res.data;
 };
 
 export const updateAutoparteStock = async (id: number, stock: number): Promise<Autoparte> => {
-  const res = await apiAutopartes.patch(`/${id}/stock?stock=${stock}`);
+  const res = await autopartesApi.updateStock(id, stock);
   return res.data;
 };

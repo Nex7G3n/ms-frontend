@@ -38,9 +38,11 @@ export default function ClientModal({
   const [filteredProvinces, setFilteredProvinces] = useState<Province[]>([]);
   const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
   const [saving, setSaving] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
 
   useEffect(() => {
     if (client && client.address) {
+      setIsInitializing(true);
       const districtData = client.address.district;
       const provinceData = districtData?.province;
       const departmentData = provinceData?.department;
@@ -66,50 +68,118 @@ export default function ClientModal({
       if (provinceData?.idProvince) {
         setFilteredDistricts(districts.filter(d => d.province.idProvince === provinceData.idProvince));
       }
+      
+      // Permitir que los efectos se ejecuten después de un breve delay
+      setTimeout(() => setIsInitializing(false), 100);
+    } else {
+      setIsInitializing(false);
     }
   }, [client, provinces, districts]);
 
   useEffect(() => {
-    if (formData.departmentId) {
-      const deptId = parseInt(formData.departmentId);
-      setFilteredProvinces(provinces.filter(p => p.department.idDepartment === deptId));
-      setFormData(prev => ({ ...prev, provinceId: '', districtId: '' }));
-    } else {
-      setFilteredProvinces([]);
+    // No borrar valores si estamos inicializando o si no hay departmentId
+    if (isInitializing || !formData.departmentId) {
+      if (!isInitializing && !formData.departmentId) {
+        setFilteredProvinces([]);
+      }
+      return;
     }
-  }, [formData.departmentId, provinces]);
+    
+    const deptId = parseInt(formData.departmentId);
+    setFilteredProvinces(provinces.filter(p => p.department.idDepartment === deptId));
+    
+    // Solo borrar provinceId y districtId si el usuario cambió el departamento manualmente
+    if (!isInitializing) {
+      setFormData(prev => ({ ...prev, provinceId: '', districtId: '' }));
+    }
+  }, [formData.departmentId, provinces, isInitializing]);
 
   useEffect(() => {
-    if (formData.provinceId) {
-      const provId = parseInt(formData.provinceId);
-      setFilteredDistricts(districts.filter(d => d.province.idProvince === provId));
-      setFormData(prev => ({ ...prev, districtId: '' }));
-    } else {
-      setFilteredDistricts([]);
+    // No borrar valores si estamos inicializando o si no hay provinceId
+    if (isInitializing || !formData.provinceId) {
+      if (!isInitializing && !formData.provinceId) {
+        setFilteredDistricts([]);
+      }
+      return;
     }
-  }, [formData.provinceId, districts]);
+    
+    const provId = parseInt(formData.provinceId);
+    setFilteredDistricts(districts.filter(d => d.province.idProvince === provId));
+    
+    // Solo borrar districtId si el usuario cambió la provincia manualmente
+    if (!isInitializing) {
+      setFormData(prev => ({ ...prev, districtId: '' }));
+    }
+  }, [formData.provinceId, districts, isInitializing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
+      // Buscar el tipo de documento
       const selectedDocumentType = documentTypes.find(
         (type) => type.idDocumentType.toString() === formData.documentTypeId
       );
-      const selectedDistrict = districts.find(
+
+      // Buscar el distrito - primero en filteredDistricts, luego en districts completo
+      let selectedDistrict = filteredDistricts.find(
         (dist) => dist.idDistrict.toString() === formData.districtId
       );
+      
+      // Si no se encuentra en filteredDistricts, buscar en el array completo
+      if (!selectedDistrict) {
+        selectedDistrict = districts.find(
+          (dist) => dist.idDistrict.toString() === formData.districtId
+        );
+      }
 
       if (!selectedDocumentType || !selectedDistrict) {
+        console.error('Debug info:', {
+          documentTypeId: formData.documentTypeId,
+          districtId: formData.districtId,
+          documentTypesCount: documentTypes.length,
+          districtsCount: districts.length,
+          filteredDistrictsCount: filteredDistricts.length,
+          selectedDocumentType,
+          selectedDistrict
+        });
         throw new Error('Tipo de documento o distrito no seleccionado.');
       }
+
+      // Construir la estructura completa de la provincia
+      const selectedProvince = provinces.find(
+        (prov) => prov.idProvince.toString() === formData.provinceId
+      );
+      
+      // Construir la estructura completa del departamento
+      const selectedDepartment = departments.find(
+        (dept) => dept.idDepartment.toString() === formData.departmentId
+      );
+
+      if (!selectedProvince || !selectedDepartment) {
+        throw new Error('Provincia o departamento no seleccionado.');
+      }
+
+      // Construir la estructura completa del distrito con toda la jerarquía
+      const districtWithHierarchy = {
+        idDistrict: selectedDistrict.idDistrict,
+        name: selectedDistrict.name,
+        province: {
+          idProvince: selectedProvince.idProvince,
+          name: selectedProvince.name,
+          department: {
+            idDepartment: selectedDepartment.idDepartment,
+            name: selectedDepartment.name
+          }
+        }
+      };
 
       const addressData = {
         street: formData.street,
         number: formData.number,
         reference: formData.reference || undefined,
-        district: selectedDistrict,
+        district: districtWithHierarchy,
       };
 
       await onSave({
@@ -118,7 +188,7 @@ export default function ClientModal({
         email: formData.email,
         phone: formData.phone,
         documentNumber: formData.documentNumber,
-        documentType: selectedDocumentType,
+        documentType: selectedDocumentType, // Ya incluye idDocumentType, name, description
         address: addressData,
       });
     } catch (error) {

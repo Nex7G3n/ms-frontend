@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, Mail, Phone, MapPin, Users, Loader2 } from 'lucide-react';
 import {
   getClients,
@@ -29,38 +29,66 @@ export default function ClientesView() {
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loadingModalData, setLoadingModalData] = useState(false);
+  const [modalDataLoaded, setModalDataLoaded] = useState(false);
 
   const itemsPerPage = 10;
+  const loadingRef = useRef(false);
+  const prevSearchQueryRef = useRef(searchQuery);
 
+  // Resetear página cuando cambia la búsqueda
   useEffect(() => {
+    if (prevSearchQueryRef.current !== searchQuery && currentPage !== 1) {
+      setCurrentPage(1);
+    }
+    prevSearchQueryRef.current = searchQuery;
+  }, [searchQuery, currentPage]);
+
+  // Cargar clientes cuando cambia la búsqueda o la página
+  useEffect(() => {
+    // Evitar múltiples llamadas simultáneas
+    if (loadingRef.current) return;
+    
     loadClients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchQuery]);
 
-  useEffect(() => {
-    const loadModalData = async () => {
-      setLoadingModalData(true);
-      try {
-        const [docTypes, depts, provs, dists] = await Promise.all([
-          getDocumentTypes(),
-          getDepartments(),
-          getProvinces(),
-          getDistricts(),
-        ]);
-        setDocumentTypes(docTypes);
-        setDepartments(depts);
-        setProvinces(provs);
-        setDistricts(dists);
-      } catch (error) {
-        console.error("Error loading modal data:", error);
-      } finally {
-        setLoadingModalData(false);
-      }
-    };
-    loadModalData();
-  }, []);
-
-  const loadClients = async () => {
+  // Cargar datos del modal solo cuando se necesita
+  const loadModalData = useCallback(async () => {
+    if (modalDataLoaded) return; // Ya están cargados
+    
+    setLoadingModalData(true);
     try {
+      const [docTypes, depts, provs, dists] = await Promise.all([
+        getDocumentTypes(),
+        getDepartments(),
+        getProvinces(),
+        getDistricts(),
+      ]);
+      setDocumentTypes(docTypes);
+      setDepartments(depts);
+      setProvinces(provs);
+      setDistricts(dists);
+      setModalDataLoaded(true);
+    } catch (error) {
+      console.error("Error loading modal data:", error);
+    } finally {
+      setLoadingModalData(false);
+    }
+  }, [modalDataLoaded]);
+
+  // Cargar datos del modal cuando se abre el modal
+  useEffect(() => {
+    if (showModal && !modalDataLoaded) {
+      loadModalData();
+    }
+  }, [showModal, modalDataLoaded, loadModalData]);
+
+  const loadClients = useCallback(async () => {
+    // Prevenir múltiples llamadas simultáneas
+    if (loadingRef.current) return;
+    
+    try {
+      loadingRef.current = true;
       setLoading(true);
       const response = await getClients(currentPage, itemsPerPage, searchQuery);
       setClients(response.data);
@@ -69,22 +97,23 @@ export default function ClientesView() {
       console.error("Error loading clients:", error);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [currentPage, itemsPerPage, searchQuery]);
 
   const handleCreate = () => {
     setEditingClient(null);
     setShowModal(true);
   };
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1);
-  };
+    // El reset de página se maneja en el useEffect
+  }, []);
 
   const handleEdit = (client: Client) => {
     setEditingClient(client);
@@ -96,7 +125,7 @@ export default function ClientesView() {
     setShowConfirmModal(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = useCallback(async () => {
     if (clientToDelete === null) return;
 
     try {
@@ -108,14 +137,14 @@ export default function ClientesView() {
       console.error("Error deleting client:", error);
       alert("Error al eliminar el cliente");
     }
-  };
+  }, [clientToDelete, loadClients]);
 
   const handleCancelDelete = () => {
     setShowConfirmModal(false);
     setClientToDelete(null);
   };
 
-  const handleSave = async (data: CreateClientDTO) => {
+  const handleSave = useCallback(async (data: CreateClientDTO) => {
     try {
       if (editingClient) {
         await updateClient(editingClient.idClient, data);
@@ -124,11 +153,12 @@ export default function ClientesView() {
       }
       await loadClients();
       setShowModal(false);
+      setEditingClient(null);
     } catch (error) {
       console.error("Error saving client:", error);
       throw error;
     }
-  };
+  }, [editingClient, loadClients]);
 
   if (loading) {
     return (

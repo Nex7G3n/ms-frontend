@@ -44,6 +44,12 @@ export default function ModeloModal({
     setSaving(true);
 
     try {
+      console.log('=== FRONTEND DEBUG ===');
+      console.log('FormData:', formData);
+      console.log('Marca ID:', formData.marca.id);
+      console.log('Marcas disponibles:', marcas);
+      console.log('===================');
+      
       if (!formData.marca.id || formData.marca.id === 0) {
         alert('Por favor, seleccione una marca válida.');
         return;
@@ -130,7 +136,10 @@ export default function ModeloModal({
               <select
                 required
                 value={formData.marca.id || ''}
-                onChange={(e) => setFormData({ ...formData, marca: { id: parseInt(e.target.value) } })}
+                onChange={(e) => {
+                  console.log('Select changed:', e.target.value);
+                  setFormData({ ...formData, marca: { id: parseInt(e.target.value) } });
+                }}
                 className={selectClasses}
               >
                 <option value="" disabled>Seleccionar Marca</option>

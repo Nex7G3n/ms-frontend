@@ -115,7 +115,7 @@ export const modelosApi = {
     const payload = {
       nombre: data.nombre,
       anio: data.anio,
-      marca: { id: data.marcaId },
+      marca: { id: data.marca.id },
     };
     return apiClient.post<Modelo>('/api/autopartes/modelos', payload);
   },
@@ -124,7 +124,7 @@ export const modelosApi = {
       nombre: data.nombre,
       anio: data.anio,
     };
-    if (data.marcaId) payload.marca = { id: data.marcaId };
+    if (data.marca?.id) payload.marca = { id: data.marca.id };
     return apiClient.put<Modelo>(`/api/autopartes/modelos/${id}`, payload);
   },
   delete: (id: number) => apiClient.delete(`/api/autopartes/modelos/${id}`),

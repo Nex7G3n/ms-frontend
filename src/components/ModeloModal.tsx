@@ -19,7 +19,7 @@ export default function ModeloModal({
   const [formData, setFormData] = useState<CreateModeloDTO>({
     nombre: '',
     anio: '',
-    marca: { id: 0 },
+    marca: { id: null as any },
   });
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +34,7 @@ export default function ModeloModal({
       setFormData({
         nombre: '',
         anio: '',
-        marca: { id: 0 },
+        marca: { id: null as any },
       });
     }
   }, [modelo, marcas]);
@@ -44,7 +44,7 @@ export default function ModeloModal({
     setSaving(true);
 
     try {
-      if (formData.marca.id === 0) {
+      if (!formData.marca.id || formData.marca.id === 0) {
         alert('Por favor, seleccione una marca válida.');
         return;
       }
@@ -129,11 +129,11 @@ export default function ModeloModal({
             ) : (
               <select
                 required
-                value={formData.marca.id}
+                value={formData.marca.id || ''}
                 onChange={(e) => setFormData({ ...formData, marca: { id: parseInt(e.target.value) } })}
                 className={selectClasses}
               >
-                <option value="0" disabled>Seleccionar Marca</option>
+                <option value="" disabled>Seleccionar Marca</option>
                 {marcas.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.nombre}
@@ -153,7 +153,7 @@ export default function ModeloModal({
             </button>
             <button
               type="submit"
-              disabled={saving || marcas.length === 0 || formData.marca.id === 0}
+              disabled={saving || marcas.length === 0 || !formData.marca.id}
               className="px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all shadow-lg shadow-violet-500/25 font-medium disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
             >
               {saving ? (

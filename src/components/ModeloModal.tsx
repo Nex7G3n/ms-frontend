@@ -50,15 +50,9 @@ export default function ModeloModal({
       console.log('Marcas disponibles:', marcas);
       console.log('===================');
       
-      // PRUEBA SIMPLE: Forzar marca ID 1 si es null
+      // Validar que se haya seleccionado una marca
       if (!formData.marca.id || formData.marca.id === 0) {
-        console.log('Forzando marca ID a 1 para prueba');
-        const testData = {
-          ...formData,
-          marca: { id: 1 }
-        };
-        console.log('TestData:', testData);
-        await onSave(testData);
+        alert('Por favor, seleccione una marca válida.');
         return;
       }
       
@@ -145,8 +139,16 @@ export default function ModeloModal({
                 required
                 value={formData.marca.id || ''}
                 onChange={(e) => {
-                  console.log('Select changed:', e.target.value);
-                  setFormData({ ...formData, marca: { id: parseInt(e.target.value) } });
+                  console.log('=== SELECT DEBUG ===');
+                  console.log('Valor seleccionado:', e.target.value);
+                  console.log('parseInt:', parseInt(e.target.value));
+                  console.log('FormData antes:', formData);
+                  
+                  const newFormData = { ...formData, marca: { id: parseInt(e.target.value) } };
+                  console.log('FormData después:', newFormData);
+                  console.log('==================');
+                  
+                  setFormData(newFormData);
                 }}
                 className={selectClasses}
               >

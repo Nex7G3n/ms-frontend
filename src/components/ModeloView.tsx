@@ -8,8 +8,8 @@ import {
   deleteModelo,
 } from '../services/apiModelos';
 import { getMarcas } from '../services/apiMarcas';
-import type { Modelo, CreateModeloDTO, UpdateModeloDTO } from '../types/modelModelo';
-import type { Marca } from '../types/modelMarca';
+import type { Modelo, CreateModeloDTO, UpdateModeloDTO } from '../types/models';
+import type { Marca } from '../types/models';
 import ModeloModal from './ModeloModal';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -79,6 +79,11 @@ export default function ModeloView({ selectedMarcaId, marcas }: ModeloViewProps)
 
   const handleSave = async (data: CreateModeloDTO) => {
     try {
+      console.log('=== HANDLE SAVE DEBUG ===');
+      console.log('Data recibida:', data);
+      console.log('JSON que se enviará:', JSON.stringify(data));
+      console.log('========================');
+      
       if (editingModelo) {
         const updateData: CreateModeloDTO = {
           nombre: data.nombre,

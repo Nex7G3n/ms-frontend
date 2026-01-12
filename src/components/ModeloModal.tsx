@@ -50,10 +50,18 @@ export default function ModeloModal({
       console.log('Marcas disponibles:', marcas);
       console.log('===================');
       
+      // PRUEBA SIMPLE: Forzar marca ID 1 si es null
       if (!formData.marca.id || formData.marca.id === 0) {
-        alert('Por favor, seleccione una marca válida.');
+        console.log('Forzando marca ID a 1 para prueba');
+        const testData = {
+          ...formData,
+          marca: { id: 1 }
+        };
+        console.log('TestData:', testData);
+        await onSave(testData);
         return;
       }
+      
       await onSave(formData);
     } catch (error) {
       console.error('Error saving modelo:', error);

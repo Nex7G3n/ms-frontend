@@ -54,6 +54,10 @@ export interface CreateModeloDTO {
   marca: { id: number };
 }
 
+export interface UpdateModeloDTO extends Partial<CreateModeloDTO> {
+  id: number;
+}
+
 export interface CreatePiezaDTO {
   nombre: string;
   categoria: string;

@@ -8,6 +8,7 @@ import {
   updateAutoparteStock,
 } from '../services/apiAutopartes';
 import type { Autoparte, AutoparteFormData } from '../types/modelAutoparte';
+import type { CreateAutoparteDTO } from '../types/models';
 import AutoparteModal from './AutoparteModal';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -161,10 +162,20 @@ export default function AutoparteView() {
 
   const handleSave = async (data: AutoparteFormData) => {
     try {
+      // Transformar AutoparteFormData a CreateAutoparteDTO
+      const createData: CreateAutoparteDTO = {
+        codigoProducto: data.codigoProducto,
+        modeloId: data.modelo.id,
+        piezaId: data.pieza.id,
+        precio: data.precio,
+        stock: data.stock,
+        estado: data.estado,
+      };
+      
       if (data.id) {
-        await updateAutoparte(data.id, data);
+        await updateAutoparte(data.id, createData);
       } else {
-        await createAutoparte(data);
+        await createAutoparte(createData);
       }
       await loadAutopartes();
       setShowModal(false);

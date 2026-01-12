@@ -51,7 +51,7 @@ export interface CreateMarcaDTO {
 export interface CreateModeloDTO {
   nombre: string;
   anio: string;
-  marcaId: number;
+  marca: { id: number };
 }
 
 export interface CreatePiezaDTO {

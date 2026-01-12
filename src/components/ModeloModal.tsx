@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Car, Calendar, Tag, Loader2, AlertCircle } from 'lucide-react';
-import type { Modelo, CreateModeloDTO } from '../types/modelModelo';
-import type { Marca } from '../types/modelMarca';
+import type { Modelo, CreateModeloDTO } from '../types/models';
+import type { Marca } from '../types/models';
 
 interface ModeloModalProps {
   modelo: Modelo | null;

@@ -6,6 +6,7 @@ import type { Pieza } from '../types/modelPieza';
 import { getModelos } from '../services/apiModelos';
 import { getPiezas } from '../services/apiPiezas';
 
+//PROPS
 interface AutoparteModalProps {
   autoparte: Autoparte | null;
   onSave: (data: AutoparteFormData) => Promise<void>;

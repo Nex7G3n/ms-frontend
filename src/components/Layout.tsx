@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Package, Wrench, Car, Users, Menu, X, ChevronRight, Sparkles, Bell, Settings } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,6 +12,13 @@ interface LayoutProps {
 
 export default function Layout({ children, currentView, onViewChange }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   
   const navItems = [
     { id: 'autopartes', label: 'Autopartes', icon: Package, gradient: 'from-teal-500 to-cyan-500', shadow: 'shadow-teal-500/25' },
@@ -103,6 +112,18 @@ export default function Layout({ children, currentView, onViewChange }: LayoutPr
             
             {/* Desktop actions */}
             <div className="hidden sm:flex items-center gap-2">
+              <a
+                href="/shop"
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl hover:from-teal-600 hover:to-cyan-600 transition-all font-medium text-sm"
+              >
+                Ir a Tienda
+              </a>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-xl transition-all font-medium text-sm"
+              >
+                Cerrar Sesión
+              </button>
               <button className="p-2.5 rounded-xl hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-teal-500 rounded-full"></span>

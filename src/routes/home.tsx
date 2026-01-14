@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import ClientView from '../components/ClientView';
 import PiezasView from '../components/PiezaView';
 import MarcasYModelosView from '../components/MarcasYModelosView';
 import AutoparteView from '../components/AutoparteView';
+import { useAuth } from '../hooks/useAuth';
+import ProtectedRoute from '../components/ProtectedRoute';
 
-export default function Home() {
+function HomeContent() {
   const [currentView, setCurrentView] = useState('autopartes');
 
   useEffect(() => {
@@ -47,5 +50,23 @@ export default function Home() {
     <Layout currentView={currentView} onViewChange={handleViewChange}>
       {renderView()}
     </Layout>
+  );
+}
+
+export default function Home() {
+  const { isAuthenticated, user } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/shop" replace />;
+  }
+
+  return (
+    <ProtectedRoute requireAdmin={true}>
+      <HomeContent />
+    </ProtectedRoute>
   );
 }

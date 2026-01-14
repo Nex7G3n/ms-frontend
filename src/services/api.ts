@@ -62,26 +62,97 @@ export const autopartesApi = {
   getAll: () => apiClient.get<Autoparte[]>('/api/autopartes/autopartes', { params: { t: Date.now() } }),
   getById: (id: number) => apiClient.get<Autoparte>(`/api/autopartes/autopartes/${id}`),
   create: (data: CreateAutoparteDTO) => {
+    // Validar datos antes de enviar
+    if (!data.modeloId || data.modeloId === 0) {
+      throw new Error('Modelo ID es requerido');
+    }
+    if (!data.piezaId || data.piezaId === 0) {
+      throw new Error('Pieza ID es requerido');
+    }
+    if (!data.codigoProducto || data.codigoProducto.trim() === '') {
+      throw new Error('Código de producto es requerido');
+    }
+    if (data.precio === undefined || data.precio === null || data.precio <= 0) {
+      throw new Error('Precio debe ser mayor a 0');
+    }
+    if (data.stock === undefined || data.stock === null || data.stock < 0) {
+      throw new Error('Stock debe ser mayor o igual a 0');
+    }
+    
     // Transformar el DTO para que coincida con lo que espera el backend
-    const payload = {
-      codigoProducto: data.codigoProducto,
-      modelo: { id: data.modeloId },
-      pieza: { id: data.piezaId },
-      precio: data.precio,
-      stock: data.stock,
-      estado: data.estado,
+    // Asegurar que los números sean del tipo correcto
+    const modeloId = parseInt(String(data.modeloId), 10);
+    const piezaId = parseInt(String(data.piezaId), 10);
+    const precio = parseFloat(String(data.precio));
+    const stock = parseInt(String(data.stock), 10);
+    
+    // Normalizar estado - asegurar que esté en el formato correcto
+    let estadoNormalizado = (data.estado?.toUpperCase() || 'DISPONIBLE').trim();
+    // Mapear posibles variaciones del estado
+    const estadoMap: Record<string, string> = {
+      'DISPONIBLE': 'DISPONIBLE',
+      'AGOTADO': 'AGOTADO',
+      'BAJO_STOCK': 'BAJO_STOCK',
+      'BAJO STOCK': 'BAJO_STOCK',
+      'DESCONTINUADO': 'DESCONTINUADO',
+      'DISPONIBLE': 'DISPONIBLE',
     };
-    return apiClient.post<Autoparte>('/api/autopartes/autopartes', payload);
+    estadoNormalizado = estadoMap[estadoNormalizado] || 'DISPONIBLE';
+    
+    const payload = {
+      codigoProducto: String(data.codigoProducto).trim(),
+      modelo: { id: modeloId },
+      pieza: { id: piezaId },
+      precio: precio,
+      stock: stock,
+      estado: estadoNormalizado,
+    };
+    
+    console.log('=== DEBUG CREATE AUTOPARTE ===');
+    console.log('Datos recibidos:', data);
+    console.log('Payload final:', JSON.stringify(payload, null, 2));
+    console.log('Tipos de datos:', {
+      codigoProducto: typeof payload.codigoProducto,
+      modeloId: typeof payload.modelo.id,
+      piezaId: typeof payload.pieza.id,
+      precio: typeof payload.precio,
+      stock: typeof payload.stock,
+      estado: typeof payload.estado,
+    });
+    console.log('Valores numéricos:', {
+      modeloId: payload.modelo.id,
+      piezaId: payload.pieza.id,
+      precio: payload.precio,
+      stock: payload.stock,
+    });
+    console.log('=============================');
+    
+    return apiClient.post<Autoparte>('/api/autopartes/autopartes', payload).catch((error) => {
+      console.error('=== ERROR EN CREATE AUTOPARTE ===');
+      console.error('Error completo:', error);
+      console.error('Request URL:', error.config?.url);
+      console.error('Request method:', error.config?.method);
+      console.error('Request data:', error.config?.data);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+      }
+      console.error('================================');
+      throw error;
+    });
   },
   update: (id: number, data: Partial<CreateAutoparteDTO>) => {
     const payload: any = {
       codigoProducto: data.codigoProducto,
       precio: data.precio,
       stock: data.stock,
-      estado: data.estado,
+      estado: data.estado?.toUpperCase() || 'DISPONIBLE', // Normalizar estado
     };
     if (data.modeloId) payload.modelo = { id: data.modeloId };
     if (data.piezaId) payload.pieza = { id: data.piezaId };
+    
+    console.log('Payload de actualización enviado al backend:', payload); // Debug
     return apiClient.put<Autoparte>(`/api/autopartes/autopartes/${id}`, payload);
   },
   updateStock: (id: number, stock: number) => 

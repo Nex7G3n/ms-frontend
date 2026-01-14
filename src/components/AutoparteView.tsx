@@ -162,6 +162,20 @@ export default function AutoparteView() {
 
   const handleSave = async (data: AutoparteFormData) => {
     try {
+      // Validar que modelo y pieza tengan IDs válidos
+      if (!data.modelo?.id || data.modelo.id === 0) {
+        alert('Por favor, seleccione un modelo válido.');
+        return;
+      }
+      
+      if (!data.pieza?.id || data.pieza.id === 0) {
+        alert('Por favor, seleccione una pieza válida.');
+        return;
+      }
+
+      // Normalizar el estado a mayúsculas si es necesario
+      const estadoNormalizado = data.estado?.toUpperCase() || 'DISPONIBLE';
+      
       // Transformar AutoparteFormData a CreateAutoparteDTO
       const createData: CreateAutoparteDTO = {
         codigoProducto: data.codigoProducto,
@@ -169,8 +183,11 @@ export default function AutoparteView() {
         piezaId: data.pieza.id,
         precio: data.precio,
         stock: data.stock,
-        estado: data.estado,
+        estado: estadoNormalizado,
       };
+      
+      console.log('Enviando datos:', createData); // Debug
+      console.log('Datos originales del formulario:', data); // Debug
       
       if (data.id) {
         await updateAutoparte(data.id, createData);
@@ -179,8 +196,29 @@ export default function AutoparteView() {
       }
       await loadAutopartes();
       setShowModal(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving autoparte:', error);
+      console.error('Error response:', error.response?.data); // Ver detalles del error
+      console.error('Error status:', error.response?.status); // Ver status code
+      console.error('Error config:', error.config); // Ver la petición completa
+      
+      // Mostrar más detalles del error
+      let errorMessage = 'Error al guardar la autoparte';
+      if (error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else {
+          errorMessage = JSON.stringify(error.response.data);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(`Error al guardar: ${errorMessage}`);
       throw error;
     }
   };

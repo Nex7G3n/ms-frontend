@@ -75,14 +75,50 @@ export default function AutoparteModal({
     setSaving(true);
 
     try {
-      if (formData.modelo.id === 0 || formData.pieza.id === 0) {
-        alert('Por favor, seleccione un modelo y una pieza válidos.');
+      // Validaciones mejoradas
+      if (!formData.modelo?.id || formData.modelo.id === 0) {
+        alert('Por favor, seleccione un modelo válido.');
+        setSaving(false);
         return;
       }
+      
+      if (!formData.pieza?.id || formData.pieza.id === 0) {
+        alert('Por favor, seleccione una pieza válida.');
+        setSaving(false);
+        return;
+      }
+
+      if (!formData.codigoProducto || formData.codigoProducto.trim() === '') {
+        alert('Por favor, ingrese un código de producto.');
+        setSaving(false);
+        return;
+      }
+
+      if (formData.precio <= 0) {
+        alert('El precio debe ser mayor a 0.');
+        setSaving(false);
+        return;
+      }
+
+      if (formData.stock < 0) {
+        alert('El stock no puede ser negativo.');
+        setSaving(false);
+        return;
+      }
+
+      // Asegurar que el estado esté en el formato correcto
+      if (!formData.estado || formData.estado.trim() === '') {
+        formData.estado = 'DISPONIBLE';
+      } else {
+        formData.estado = formData.estado.toUpperCase();
+      }
+
       await onSave(formData);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving autoparte:', error);
-      alert('Error al guardar la autoparte');
+      console.error('Error details:', error.response?.data); // Debug adicional
+      const errorMessage = error.response?.data?.message || error.message || 'Error al guardar la autoparte';
+      alert(`Error: ${errorMessage}`);
     } finally {
       setSaving(false);
     }
